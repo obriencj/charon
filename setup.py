@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 Copyright (C) 2022 Red Hat, Inc. (https://github.com/Commonjava/charon)
 
@@ -13,8 +15,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
-# !/usr/bin/env python
 
 import re
 
