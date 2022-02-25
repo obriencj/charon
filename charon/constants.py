@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 ARCHETYPE_CATALOG_FILENAME = "archetype-catalog.xml"
 ARCHETYPE_CATALOG_TEMPLATE = '''
 <archetype-catalog>
@@ -114,60 +115,6 @@ MAVEN_METADATA_TEMPLATE = '''
   </plugins>
   {%- endif %}
 </metadata>
-'''
-INDEX_HTML_TEMPLATE = '''
-<!DOCTYPE html>
-<html>
-<head>
-  <title>{{ index.title }}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-body {
-  background: #fff;
-}
-  </style>
-</head>
-<body>
-  <header>
-    <h1>{{ index.header }}</h1>
-  </header>
-  <hr/>
-  <main>
-    <ul style="list-style: none outside;" id="contents">{% for item in index.items %}
-        <li><a href="{{ item }}" title="{{ item }}">{{ item }}</a></li>{% endfor%}
-    </ul>
-  </main>
-  <hr/>
-</body>
-</html>
-'''
-NPM_INDEX_HTML_TEMPLATE = '''
-<!DOCTYPE html>
-<html>
-<head>
-  <title>{{ index.title }}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-body {
-  background: #fff;
-}
-  </style>
-</head>
-<body>
-  <header>
-    <h1>{{ index.header }}</h1>
-  </header>
-  <hr/>
-  <main>
-    <ul style="list-style: none outside;" id="contents">
-        {% for item in index.items %}{% if item.startswith("@") or item.startswith("..") %}
-        <li><a href="{{ item }}index.html" title="{{ item }}">{{ item }}</a></li>{% else %}
-        <li><a href="{{ item }}" title="{{ item }}">{{ item }}</a></li>{% endif %}{% endfor%}
-    </ul>
-  </main>
-  <hr/>
-</body>
-</html>
 '''
 
 PROD_INFO_SUFFIX = ".prodinfo"

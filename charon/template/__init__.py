@@ -17,7 +17,7 @@ from pkg_resources import resource_string
 
 
 def get_default_template(name: str) -> str:
-    return pkg_resources.resource_string(__name__, name)
+    return resource_string(__name__, name).decode()
 
 
 # The end.

@@ -37,6 +37,8 @@ setup(
     install_requires = [
         'boto3',
         'click',
+        'defusedxml',
+        'jinja2',
         'ruamel.yaml',
         'requests',
         'semantic_version',
