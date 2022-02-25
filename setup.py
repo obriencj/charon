@@ -25,16 +25,35 @@ setup(
         'charon.cmd',
         'charon.pkgs',
         'charon.utils',
+        'charon.template',
     ],
+
+    package_data = {
+        'charon.template': [
+            '*.j2',
+        ],
+    },
 
     install_requires = [
         'boto3',
         'click',
+        'ruamel.yaml',
         'requests',
+        'semantic_version',
+
+        "enum34 ; python_version < '3.4'",
+        "typing_extensions ; python_version < '3.8'",
+    ],
+
+    tests_require = [
+        'boto3_type_annotations',
+        'moto',
     ],
 
     entry_points = {
-        "console_scripts": ["charon = charon:cli"],
+        "console_scripts": [
+            "charon = charon:cli",
+        ],
     },
 )
 
