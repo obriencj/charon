@@ -1,41 +1,43 @@
-"""
-Copyright (C) 2022 Red Hat, Inc. (https://github.com/Commonjava/charon)
+# Copyright (C) 2022 Red Hat, Inc. (https://github.com/Commonjava/charon)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#          http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
 
-         http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-from charon.utils.files import HashType
-import charon.pkgs.indexing as indexing
-from charon.utils.files import overwrite_file, digest, write_manifest
-from charon.utils.archive import extract_zip_all
-from charon.utils.strings import remove_prefix
-from charon.storage import S3Client
-from charon.pkgs.pkg_utils import upload_post_process, rollback_post_process
-from charon.config import get_template
-from charon.constants import (META_FILE_GEN_KEY, META_FILE_DEL_KEY,
-                              META_FILE_FAILED, MAVEN_METADATA_TEMPLATE,
-                              ARCHETYPE_CATALOG_TEMPLATE, ARCHETYPE_CATALOG_FILENAME,
-                              PACKAGE_TYPE_MAVEN)
-from typing import Dict, List, Tuple
-from jinja2 import Template
-from datetime import datetime
-from zipfile import ZipFile, BadZipFile
-from tempfile import mkdtemp
-from defusedxml import ElementTree
-
-import os
-import sys
 import logging
+import os
 import re
+import sys
+
+from datetime import datetime
+from defusedxml import ElementTree
+from jinja2 import Template
+from tempfile import mkdtemp
+from typing import Dict, List, Tuple
+from zipfile import ZipFile, BadZipFile
+
+from .indexing import generate_indexes
+from .pkg_utils import upload_post_process, rollback_post_process
+from ..utils import remove_prefix
+from ..utils.archive import extract_zip_all
+from ..utils.files import HashType
+from ..utils.files import overwrite_file, digest, write_manifest
+from ..storage import S3Client
+from ..config import get_template
+from ..constants import (
+    META_FILE_GEN_KEY, META_FILE_DEL_KEY,
+    META_FILE_FAILED, MAVEN_METADATA_TEMPLATE,
+    ARCHETYPE_CATALOG_TEMPLATE, ARCHETYPE_CATALOG_FILENAME,
+    PACKAGE_TYPE_MAVEN, )
 
 logger = logging.getLogger(__name__)
 
@@ -107,8 +109,8 @@ class ArchetypeRef(object):
     def __eq__(self, other) -> bool:
         if isinstance(other, ArchetypeRef):
             return self.group_id == other.group_id \
-                   and self.artifact_id == other.artifact_id \
-                   and self.version == other.version
+                and self.artifact_id == other.artifact_id \
+                and self.version == other.version
 
         return False
 
@@ -378,7 +380,7 @@ def handle_maven_uploading(
     # index is similar to metadata, it will be overwritten everytime
     if do_index:
         logger.info("Start generating index files to s3")
-        created_indexes = indexing.generate_indexes(
+        created_indexes = generate_indexes(
             PACKAGE_TYPE_MAVEN, top_level, valid_dirs, s3_client, bucket, prefix_
         )
         logger.info("Index files generation done.\n")
@@ -531,7 +533,7 @@ def handle_maven_del(
 
     if do_index:
         logger.info("Start generating index files for all changed entries")
-        created_indexes = indexing.generate_indexes(
+        created_indexes = generate_indexes(
             PACKAGE_TYPE_MAVEN, top_level, valid_dirs, s3_client, bucket, prefix_
         )
         logger.info("Index files generation done.\n")
