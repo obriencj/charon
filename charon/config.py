@@ -1,25 +1,28 @@
-"""
-Copyright (C) 2022 Red Hat, Inc. (https://github.com/Commonjava/charon)
+# Copyright (C) 2022 Red Hat, Inc. (https://github.com/Commonjava/charon)
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-         http://www.apache.org/licenses/LICENSE-2.0
+#          http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 from typing import Dict, List
 from ruamel.yaml import YAML
 from pathlib import Path
+
 import os
 import logging
 
-from charon.utils.strings import remove_prefix
+from .template import get_default_template
+from .utils import remove_prefix
+
 
 CONFIG_FILE = "charon.yaml"
 
@@ -27,11 +30,13 @@ logger = logging.getLogger(__name__)
 
 
 class CharonConfig(object):
-    """CharonConfig is used to store all configurations for charon
-    tools.
-    The configuration file will be named as charon.yaml, and will be stored
-    in $HOME/.charon/ folder by default.
     """
+    CharonConfig is used to store all configurations for charon tools.
+    The configuration file will be named as charon.yaml, and will be
+    stored in $HOME/.charon/ folder by default.
+    """
+
+
     def __init__(self, data: Dict):
         self.__ignore_patterns: List[str] = data.get("ignore_patterns", None)
         self.__aws_profile: str = data.get("aws_profile", None)
@@ -93,10 +98,16 @@ def get_config() -> CharonConfig:
 
 
 def get_template(template_file: str) -> str:
-    template = os.path.join(
-        os.getenv("HOME"), ".charon/template", template_file
-    )
-    if os.path.isfile(template):
-        with open(template, encoding="utf-8") as file_:
-            return file_.read()
-    raise FileNotFoundError
+
+    template = os.path.join(os.path.expanduser("~/.charon/template"),
+                            template_file)
+
+    print("template =", template)
+    if os.path.exists(template):
+        with open(template, encoding="utf-8") as f:
+            return f.read()
+    else:
+        return get_default_template(template_file)
+
+
+# The end.
