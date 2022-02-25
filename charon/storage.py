@@ -481,7 +481,7 @@ class S3Client(object):
                     Delimiter='/'
                 )
             else:
-                prefix = folder if folder.endswith("/") else folder+"/"
+                prefix = folder if folder.endswith("/") else folder + "/"
                 result = bucket.meta.client.list_objects(
                     Bucket=bucket.name,
                     Prefix=prefix,
