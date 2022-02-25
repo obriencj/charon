@@ -13,9 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 from typing import List
 
+# this is very strange, but it's relying on the fact that type
+# annotation stubs can be imported as normal and have no function.
 from boto3_type_annotations import s3
+
 from charon.storage import S3Client, CHECKSUM_META_KEY
 from charon.utils.archive import extract_zip_all
 from charon.utils.files import overwrite_file, read_sha1

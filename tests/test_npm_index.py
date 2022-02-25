@@ -1,28 +1,31 @@
-"""
-Copyright (C) 2022 Red Hat, Inc. (https://github.com/Commonjava/charon)
+# Copyright (C) 2022 Red Hat, Inc. (https://github.com/Commonjava/charon)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#          http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
 
-         http://www.apache.org/licenses/LICENSE-2.0
+import os
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 from charon.constants import PROD_INFO_SUFFIX
 from charon.pkgs.npm import handle_npm_uploading, handle_npm_del
 from charon.storage import CHECKSUM_META_KEY
-from tests.base import LONG_TEST_PREFIX, SHORT_TEST_PREFIX, PackageBaseTest
-from tests.commons import (
+from moto import mock_s3
+
+from .base import LONG_TEST_PREFIX, SHORT_TEST_PREFIX, PackageBaseTest
+from .commons import (
     TEST_BUCKET, CODE_FRAME_7_14_5_INDEXES,
     CODE_FRAME_7_15_8_INDEXES, COMMONS_ROOT_INDEX
 )
-from moto import mock_s3
-import os
+
 
 NAMESPACE_BABEL_INDEX = "@babel/index.html"
 

@@ -1,29 +1,31 @@
-"""
-Copyright (C) 2022 Red Hat, Inc. (https://github.com/Commonjava/charon)
+# Copyright (C) 2022 Red Hat, Inc. (https://github.com/Commonjava/charon)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#          http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
 
-         http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 import os
 
 from moto import mock_s3
 
 from charon.pkgs.maven import handle_maven_uploading
 from charon.pkgs.npm import handle_npm_uploading
-from tests.base import PackageBaseTest
-from tests.commons import (
+
+from .base import PackageBaseTest
+from .commons import (
     TEST_BUCKET, TEST_MANIFEST_BUCKET, TEST_TARGET, COMMONS_CLIENT_456_MVN_NUM,
-    COMMONS_CLIENT_META_NUM, COMMONS_CLIENT_456_MANIFEST, COMMONS_CLIENT_456_FILES,
-    COMMONS_LOGGING_FILES, CODE_FRAME_7_14_5_MANIFEST, CODE_FRAME_7_14_5_FILES
+    COMMONS_CLIENT_META_NUM, COMMONS_CLIENT_456_MANIFEST,
+    COMMONS_CLIENT_456_FILES, COMMONS_LOGGING_FILES,
+    CODE_FRAME_7_14_5_MANIFEST, CODE_FRAME_7_14_5_FILES,
 )
 
 

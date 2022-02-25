@@ -1,31 +1,32 @@
-"""
-Copyright (C) 2022 Red Hat, Inc. (https://github.com/Commonjava/charon)
+# Copyright (C) 2022 Red Hat, Inc. (https://github.com/Commonjava/charon)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#          http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+import os
 
-         http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 from charon.pkgs.maven import handle_maven_uploading, handle_maven_del
 from charon.storage import PRODUCT_META_KEY, CHECKSUM_META_KEY
-from charon.utils.strings import remove_prefix
+from charon.utils import remove_prefix
 from charon.constants import PROD_INFO_SUFFIX
-from tests.base import LONG_TEST_PREFIX, SHORT_TEST_PREFIX, PackageBaseTest
-from tests.commons import (
+from moto import mock_s3
+
+from .base import LONG_TEST_PREFIX, SHORT_TEST_PREFIX, PackageBaseTest
+from .commons import (
     TEST_BUCKET, COMMONS_CLIENT_456_FILES, COMMONS_CLIENT_459_FILES,
     COMMONS_CLIENT_METAS, COMMONS_LOGGING_FILES, COMMONS_LOGGING_METAS,
     ARCHETYPE_CATALOG, ARCHETYPE_CATALOG_FILES, COMMONS_CLIENT_459_MVN_NUM,
     COMMONS_CLIENT_META_NUM
 )
-from moto import mock_s3
-import os
 
 
 @mock_s3

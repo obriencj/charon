@@ -1,32 +1,35 @@
-"""
-Copyright (C) 2022 Red Hat, Inc. (https://github.com/Commonjava/charon)
+# Copyright (C) 2022 Red Hat, Inc. (https://github.com/Commonjava/charon)
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-         http://www.apache.org/licenses/LICENSE-2.0
+#          http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-from typing import List
-from charon.config import CharonConfig, get_config
-from charon.utils.logs import set_logging
-from charon.utils.archive import detect_npm_archive, download_archive, NpmArchiveType
-from charon.pkgs.maven import handle_maven_uploading, handle_maven_del
-from charon.pkgs.npm import handle_npm_uploading, handle_npm_del
-from click import command, option, argument, group
-from json import loads
-from shutil import rmtree
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-import traceback
+
 import logging
 import os
 import sys
+import traceback
+
+from click import command, option, argument, group
+from json import loads
+from shutil import rmtree
+from typing import List
+
+from ..config import CharonConfig, get_config
+from ..utils.archive import (
+    detect_npm_archive, download_archive, NpmArchiveType, )
+from ..utils.logs import set_logging
+from ..pkgs.maven import handle_maven_uploading, handle_maven_del
+from ..pkgs.npm import handle_npm_uploading, handle_npm_del
+
 
 logger = logging.getLogger(__name__)
 
