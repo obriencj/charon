@@ -13,12 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 from enum import Enum
+from functools import partial
+from typing import List, Tuple
+
 import os
 import hashlib
 import errno
-from typing import List, Tuple
-from charon.constants import MANIFEST_SUFFIX
+
+from ..constants import MANIFEST_SUFFIX
 
 
 class HashType(Enum):
@@ -30,9 +34,6 @@ class HashType(Enum):
 
 
 def overwrite_file(file_path: str, content: str):
-    if not os.path.isfile(file_path):
-        with open(file_path, mode="a", encoding="utf-8"):
-            pass
     with open(file_path, mode="w", encoding="utf-8") as f:
         f.write(content)
 
@@ -72,29 +73,28 @@ def digest(file: str, hash_type=HashType.SHA1) -> str:
         raise Exception("Error: Unknown hash type for digesting.")
 
     with open(file, "rb") as f:
-        while True:
-            data = f.read(BUF_SIZE)
-            if not data:
-                break
+        for data in iter(partial(f.read, BUF_SIZE), b''):
             hash_obj.update(data)
 
     return hash_obj.hexdigest()
 
 
-def write_manifest(paths: List[str], root: str, product_key: str) -> Tuple[str, str]:
+def write_manifest(paths: List[str],
+                   root: str,
+                   product_key: str) -> Tuple[str, str]:
+
     manifest_name = product_key + MANIFEST_SUFFIX
     manifest_path = os.path.join(root, manifest_name)
-    artifacts = []
-    for path in paths:
-        if path.startswith(root):
-            path = path[len(root):]
-        if path.startswith("/"):
-            path = path[1:]
-        artifacts.append(path)
 
-    if not os.path.isfile(manifest_path):
-        with open(manifest_path, mode="a", encoding="utf-8"):
-            pass
     with open(manifest_path, mode="w", encoding="utf-8") as f:
-        f.write('\n'.join(artifacts))
+        for path in paths:
+            if path.startswith(root):
+                path = path[len(root):]
+            if path.startswith("/"):
+                path = path[1:]
+            print(path, file=f, end='\n')
+
     return manifest_name, manifest_path
+
+
+# The end.
