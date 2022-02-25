@@ -1,35 +1,37 @@
-"""
-Copyright (C) 2022 Red Hat, Inc. (https://github.com/Commonjava/charon)
+# Copyright (C) 2022 Red Hat, Inc. (https://github.com/Commonjava/charon)
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 
-         http://www.apache.org/licenses/LICENSE-2.0
+#          http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 import logging
 import os
 import sys
-from json import load, loads, dump, JSONDecodeError
 import tarfile
+
+from json import load, loads, dump, JSONDecodeError
+from semantic_version import compare
 from tempfile import mkdtemp
 from typing import Set, Tuple
 
-from semantic_version import compare
+from .indexing import generate_indexes
+from .pkg_utils import upload_post_process, rollback_post_process
 
-import charon.pkgs.indexing as indexing
-from charon.constants import META_FILE_GEN_KEY, META_FILE_DEL_KEY, PACKAGE_TYPE_NPM
-from charon.storage import S3Client
-from charon.utils.archive import extract_npm_tarball
-from charon.pkgs.pkg_utils import upload_post_process, rollback_post_process
-from charon.utils.strings import remove_prefix
-from charon.utils.files import write_manifest
+from ..constants import META_FILE_GEN_KEY, META_FILE_DEL_KEY, PACKAGE_TYPE_NPM
+from ..storage import S3Client
+from ..utils import remove_prefix
+from ..utils.archive import extract_npm_tarball
+from ..utils.files import write_manifest
+
 
 logger = logging.getLogger(__name__)
 
@@ -41,25 +43,25 @@ class NPMPackageMetadata(object):
     """
 
     def __init__(self, metadata, is_version):
-        self.name = metadata.get('name', None)
-        self.description = metadata.get('description', None)
-        self.author = metadata.get('author', None)
-        self.license = metadata.get('license', None)
-        self.repository = metadata.get('repository', None)
-        self.bugs = metadata.get('bugs', None)
-        self.keywords = metadata.get('keywords', None)
-        self.maintainers = metadata.get('maintainers', None)
-        self.users = metadata.get('users', None)
-        self.homepage = metadata.get('homepage', None)
-        self.time = metadata.get('time', None)
-        self.readme = metadata.get('readme', None)
-        self.readmeFilename = metadata.get('readmeFilename', None)
+        self.name = metadata.get('name')
+        self.description = metadata.get('description')
+        self.author = metadata.get('author')
+        self.license = metadata.get('license')
+        self.repository = metadata.get('repository')
+        self.bugs = metadata.get('bugs')
+        self.keywords = metadata.get('keywords')
+        self.maintainers = metadata.get('maintainers')
+        self.users = metadata.get('users')
+        self.homepage = metadata.get('homepage')
+        self.time = metadata.get('time')
+        self.readme = metadata.get('readme')
+        self.readmeFilename = metadata.get('readmeFilename')
         if is_version:
             self.dist_tags = {'latest': metadata.get('version')}
             self.versions = {metadata.get('version'): metadata}
         else:
-            self.dist_tags = metadata.get('dist_tags', None)
-            self.versions = metadata.get('versions', None)
+            self.dist_tags = metadata.get('dist_tags')
+            self.versions = metadata.get('versions')
 
 
 def handle_npm_uploading(
@@ -72,20 +74,20 @@ def handle_npm_uploading(
         do_index=True,
         dry_run=False,
         target=None,
-        manifest_bucket_name=None
-) -> str:
-    """ Handle the npm product release tarball uploading process.
-        For NPM uploading, tgz file and version metadata will be relocated based
-        on the native npm structure, package metadata will follow the base.
-        * tarball_path is the location of the tarball in filesystem
-        * product is used to identify which product this repo
-          tar belongs to
-        * bucket_name is the s3 bucket name to store the artifacts
-        * dir_ is base dir for extracting the tarball, will use system
-          tmp dir if None.
-
-        Returns the directory used for archive processing.
+        manifest_bucket_name=None) -> str:
     """
+    Handle the npm product release tarball uploading process.  For NPM
+    uploading, tgz file and version metadata will be relocated based
+    on the native npm structure, package metadata will follow the
+    base.  * tarball_path is the location of the tarball in filesystem
+    * product is used to identify which product this repo tar belongs
+    to * bucket_name is the s3 bucket name to store the artifacts *
+    dir_ is base dir for extracting the tarball, will use system tmp
+    dir if None.
+
+    Returns the directory used for archive processing.
+    """
+
     target_dir, valid_paths, package_metadata = _scan_metadata_paths_from_archive(
         tarball_path, prod=product, dir__=dir_
     )
@@ -141,7 +143,7 @@ def handle_npm_uploading(
     # index is similar to metadata, it will be overwritten everytime
     if do_index:
         logger.info("Start generating index files to s3")
-        created_indexes = indexing.generate_indexes(
+        created_indexes = generate_indexes(
             PACKAGE_TYPE_NPM, target_dir, valid_dirs, client, bucket, prefix_
         )
         logger.info("Index files generation done.\n")
@@ -171,18 +173,19 @@ def handle_npm_del(
         do_index=True,
         dry_run=False,
         target=None,
-        manifest_bucket_name=None
-) -> str:
-    """ Handle the npm product release tarball deletion process.
-        * tarball_path is the location of the tarball in filesystem
-        * product is used to identify which product this repo
-          tar belongs to
-        * bucket_name is the s3 bucket name to store the artifacts
-        * dir is base dir for extracting the tarball, will use system
-          tmp dir if None.
+        manifest_bucket_name=None) -> str:
 
-        Returns the directory used for archive processing
     """
+    Handle the npm product release tarball deletion process.  *
+    tarball_path is the location of the tarball in filesystem *
+    product is used to identify which product this repo tar belongs to
+    * bucket_name is the s3 bucket name to store the artifacts * dir
+    is base dir for extracting the tarball, will use system tmp dir if
+    None.
+
+    Returns the directory used for archive processing
+    """
+
     target_dir, package_name_path, valid_paths = _scan_paths_from_archive(
         tarball_path, prod=product, dir__=dir_
     )
@@ -232,7 +235,7 @@ def handle_npm_del(
 
     if do_index:
         logger.info("Start generating index files for all changed entries")
-        created_indexes = indexing.generate_indexes(
+        created_indexes = generate_indexes(
             PACKAGE_TYPE_NPM, target_dir, valid_dirs, client, bucket, prefix_
         )
         logger.info("Index files generation done.\n")
@@ -254,59 +257,81 @@ def handle_npm_del(
     return target_dir
 
 
-def read_package_metadata_from_content(content: str, is_version) -> NPMPackageMetadata:
+def read_package_metadata_from_content(
+        content: str, is_version) -> NPMPackageMetadata:
+
     try:
         package_metadata = loads(content)
         return NPMPackageMetadata(package_metadata, is_version)
+
     except JSONDecodeError:
         logger.error('Error: Failed to parse json!')
 
 
 def _gen_npm_package_metadata_for_upload(
-        client: S3Client, bucket: str,
-        target_dir: str, source_package: NPMPackageMetadata,
-        prefix: str = None
-) -> dict:
-    """Collect NPM versions package.json and generate the package package.json.
-       For uploading mode, package.json will merge the original in S3 with the local source.
-       What we should do here is:
-       * Scan the valid paths and source from the archive
-       * Read from local source(uploading)
-       * Use converted package.json to generate the package.json then update in S3
+        client: S3Client,
+        bucket: str,
+        target_dir: str,
+        source_package: NPMPackageMetadata,
+        prefix: str = None) -> dict:
+
     """
+    Collect NPM versions package.json and generate the package
+    package.json.  For uploading mode, package.json will merge the
+    original in S3 with the local source.
+
+    What we should do here is:
+
+     * Scan the valid paths and source from the archive
+     * Read from local source(uploading)
+     * Use converted package.json to generate the package.json then
+       update in S3
+    """
+
     meta_files = {}
     package_metadata_key = os.path.join(source_package.name, PACKAGE_JSON)
     if prefix and prefix != "/":
         package_metadata_key = os.path.join(prefix, package_metadata_key)
-    (package_json_files, success) = client.get_files(
+
+    package_json_files, success = client.get_files(
         bucket_name=bucket,
         prefix=package_metadata_key
     )
+
     if not success:
         logger.warning("Error to get remote metadata files for %s", package_metadata_key)
     result = source_package
+
     if len(package_json_files) > 0:
         result = _merge_package_metadata(
             source_package, client, bucket, package_json_files[0]
         )
         logger.debug("Merge the S3 %s with local source", package_json_files[0])
+
     meta_file = _write_package_metadata_to_file(result, target_dir)
     meta_files[META_FILE_GEN_KEY] = meta_file
+
     return meta_files
 
 
 def _gen_npm_package_metadata_for_del(
         client: S3Client, bucket: str,
         target_dir: str, package_path_prefix: str,
-        prefix: str = None
-) -> dict:
-    """Collect NPM versions package.json and generate the package package.json.
-       For del mode, all the version package.json contents to be merged will be read from S3.
-       What we should do here is:
-       * Scan the valid paths from the archive
-       * Search the target contents in s3(del)
-       * Use converted package.jsons to generate the package.json then update in S3
+        prefix: str = None) -> dict:
+
     """
+    Collect NPM versions package.json and generate the package
+    package.json.  For del mode, all the version package.json contents
+    to be merged will be read from S3.
+
+    What we should do here is:
+
+      * Scan the valid paths from the archive
+      * Search the target contents in s3(del)
+      * Use converted package.jsons to generate the package.json then
+        update in S3
+    """
+
     meta_files = {}
     package_metadata_key = os.path.join(package_path_prefix, PACKAGE_JSON)
     prefix_meta_key = package_metadata_key
@@ -348,8 +373,10 @@ def _gen_npm_package_metadata_for_del(
     return meta_files
 
 
-def _scan_metadata_paths_from_archive(path: str, prod="", dir__=None) -> Tuple[str, list,
-                                                                               NPMPackageMetadata]:
+def _scan_metadata_paths_from_archive(
+        path: str,
+        prod="", dir__=None) -> Tuple[str, list, NPMPackageMetadata]:
+
     tmp_root = mkdtemp(prefix=f"npm-charon-{prod}-", dir=dir__)
     try:
         _, valid_paths = extract_npm_tarball(path, tmp_root, True)
@@ -357,12 +384,16 @@ def _scan_metadata_paths_from_archive(path: str, prod="", dir__=None) -> Tuple[s
             version = _scan_for_version(valid_paths[1])
             package = NPMPackageMetadata(version, True)
         return tmp_root, valid_paths, package
+
     except tarfile.TarError as e:
         logger.error("Tarball extraction error: %s", e)
         sys.exit(1)
 
 
-def _scan_paths_from_archive(path: str, prod="", dir__=None) -> Tuple[str, str, list]:
+def _scan_paths_from_archive(
+        path: str,
+        prod="", dir__=None) -> Tuple[str, str, list]:
+
     tmp_root = mkdtemp(prefix=f"npm-charon-{prod}-", dir=dir__)
     package_name_path, valid_paths = extract_npm_tarball(path, tmp_root, False)
     return tmp_root, package_name_path, valid_paths
@@ -371,8 +402,8 @@ def _scan_paths_from_archive(path: str, prod="", dir__=None) -> Tuple[str, str, 
 def _merge_package_metadata(
         package_metadata: NPMPackageMetadata,
         client: S3Client, bucket: str,
-        key: str
-):
+        key: str):
+
     content = client.read_file_content(bucket, key)
     original = read_package_metadata_from_content(content, False)
 
@@ -398,7 +429,10 @@ def _is_latest_version(source_version: str, versions: list()):
     return True
 
 
-def _do_merge(original: NPMPackageMetadata, source: NPMPackageMetadata, is_latest: bool):
+def _do_merge(
+        original: NPMPackageMetadata,
+        source: NPMPackageMetadata, is_latest: bool):
+
     changed = False
     if is_latest:
         if source.name:
