@@ -66,6 +66,9 @@ targets:
     def __prepare_template(self, config_base):
         template_path = os.path.join(config_base, 'template')
         os.mkdir(config_base)
+        return
+
+        # no no no no no no no.
         shutil.copytree(os.path.join(os.getcwd(), "template"), template_path)
         if not os.path.isdir(template_path):
             self.fail("Template initilization failed!")
