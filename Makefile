@@ -11,11 +11,6 @@ VERSION := $(shell $(PYTHON) ./setup.py --version)
 ARCHIVE := $(PROJECT)-$(VERSION).tar.gz
 
 
-# We use this later in setting up the gh-pages submodule for pushing,
-# so forks will push their docs to their own gh-pages branch.
-ORIGIN_PUSH = $(shell git remote get-url --push origin)
-
-
 ##@ Basic Targets
 default: quick-test	## Runs the quick-test target
 
@@ -86,7 +81,7 @@ mypy:	## Launches mypy via tox
 
 
 quick-test: build	## Launches nosetest using the default python
-	@$(PYTHON) -B setup.py test $(NOSEARGS)
+	@$(PYTHON) -B setup.py test
 
 
 ##@ RPMs
@@ -112,49 +107,8 @@ $(ARCHIVE):
 		| gzip > "$(ARCHIVE)"
 
 
-##@ Documentation
-docs: clean-docs docs/overview.rst	## Build sphinx docs
-	@KSD_MERGE_PYI=1 $(PYTHON) -B setup.py docs
 
-
-overview: docs/overview.rst  ## rebuilds the overview from README.md
-
-
-docs/overview.rst: README.md
-	@sed 's/^\[\!.*/ /g' $< > overview.md
-	@pandoc --from=markdown --to=rst -o $@ "overview.md"
-	@rm -f overview.md
-
-
-pull-docs:	## Refreshes the gh-pages submodule
-	@git submodule init
-	@git submodule update --remote gh-pages
-
-
-stage-docs: docs pull-docs	## Builds docs and stages them in gh-pages
-	@pushd gh-pages >/dev/null && \
-	rm -rf * && \
-	touch .nojekyll ; \
-	popd >/dev/null ; \
-	cp -vr build/sphinx/dirhtml/* gh-pages/
-
-
-deploy-docs: stage-docs	## Builds, stages, and deploys docs to gh-pages
-	@pushd gh-pages >/dev/null && \
-	git remote set-url --push origin $(ORIGIN_PUSH) ; \
-	git add -A && git commit -m "deploying sphinx update" && git push ; \
-	popd >/dev/null ; \
-	if [ `git diff --name-only gh-pages` ] ; then \
-		git add gh-pages ; \
-		git commit -m "docs deploy [ci skip]" -o gh-pages ; \
-	fi
-
-
-clean-docs:	## Remove built docs
-	@rm -rf build/sphinx/*
-
-
-.PHONY: archive build clean clean-built clean-docs default deploy-docs docs flake8 help mypy overview packaging-build packaging-test quick-test rpm srpm stage-docs test tidy
+.PHONY: archive build clean clean-built default flake8 help mypy packaging-build packaging-test quick-test rpm srpm test tidy
 
 
 # The end.
