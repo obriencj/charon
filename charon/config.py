@@ -102,7 +102,6 @@ def get_template(template_file: str) -> str:
     template = os.path.join(os.path.expanduser("~/.charon/template"),
                             template_file)
 
-    print("template =", template)
     if os.path.exists(template):
         with open(template, encoding="utf-8") as f:
             return f.read()
