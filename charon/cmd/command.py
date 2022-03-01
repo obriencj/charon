@@ -1,11 +1,11 @@
 # Copyright (C) 2022 Red Hat, Inc. (https://github.com/Commonjava/charon)
-
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-
+#
 #          http://www.apache.org/licenses/LICENSE-2.0
-
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -111,25 +111,25 @@ logger = logging.getLogger(__name__)
 )
 @option("--dryrun", "-n", is_flag=True, default=False)
 @command()
-def upload(
-    repo: str,
-    product: str,
-    version: str,
-    target: str,
-    root_path="maven-repository",
-    ignore_patterns: List[str] = None,
-    work_dir: str = None,
-    debug=False,
-    quiet=False,
-    dryrun=False
-):
-    """Upload all files from a released product REPO to Ronda
-    Service. The REPO points to a product released tarball which
-    is hosted in a remote url or a local path.
+def upload(repo: str,
+           product: str,
+           version: str,
+           target: str,
+           root_path: str = "maven-repository",
+           ignore_patterns: List[str] = None,
+           work_dir: str = None,
+           debug: bool = False,
+           quiet: bool = False,
+           dryrun: bool = False):
     """
+    Upload all files from a released product REPO to Ronda Service. The
+    REPO points to a product released tarball which is hosted in a
+    remote url or a local path.
+    """
+
     tmp_dir = work_dir
     try:
-        __decide_mode(product, version, is_quiet=quiet, is_debug=debug)
+        setup_logging(product, version, is_quiet=quiet, is_debug=debug)
         if dryrun:
             logger.info("Running in dry-run mode,"
                         "no files will be uploaded.")
@@ -185,6 +185,7 @@ def upload(
                 target=target,
                 manifest_bucket_name=manifest_bucket_name
             )
+
     except Exception:
         print(traceback.format_exc())
         sys.exit(2)  # distinguish between exception and bad config or bad state
@@ -287,7 +288,7 @@ def delete(
     """
     tmp_dir = work_dir
     try:
-        __decide_mode(product, version, is_quiet=quiet, is_debug=debug)
+        setup_logging(product, version, is_quiet=quiet, is_debug=debug)
         if dryrun:
             logger.info("Running in dry-run mode,"
                         "no files will be deleted.")
@@ -384,10 +385,13 @@ def __get_local_repo(url: str) -> str:
 
 
 def __validate_prod_key(product: str, version: str) -> bool:
-    if not product or product.strip() == "":
+    product = product.strip()
+    version = version.strip()
+
+    if not product:
         logger.error("Error: product can not be empty!")
         return False
-    if not version or version.strip() == "":
+    if not version:
         logger.error("Error: version can not be empty!")
         return False
     if "," in product:
@@ -399,22 +403,28 @@ def __validate_prod_key(product: str, version: str) -> bool:
     return True
 
 
-def __decide_mode(product: str, version: str, is_quiet: bool, is_debug: bool):
+def setup_logging(product: str, version: str, is_quiet: bool, is_debug: bool):
     if is_quiet:
         logger.info("Quiet mode enabled, "
                     "will only give warning and error logs.")
         set_logging(product, version, level=logging.WARNING)
+
     elif is_debug:
         logger.info("Debug mode enabled, "
                     "will give all debug logs for tracing.")
         set_logging(product, version, level=logging.DEBUG)
+
     else:
         set_logging(product, version, level=logging.INFO)
 
 
 @group()
 def cli():
-    """Charon is a tool to synchronize several types of
-       artifacts repository data to Red Hat Ronda
-       service (maven.repository.redhat.com).
     """
+    Charon is a tool to synchronize several types of artifacts
+    repository data to Red Hat Ronda service
+    (maven.repository.redhat.com).
+    """
+
+
+# The end.
