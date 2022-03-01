@@ -62,7 +62,7 @@ class MavenMetadataTest(BaseTest):
         )
         temp_root = os.path.join(self.tempdir, "tmp_zip")
         os.mkdir(temp_root)
-        archive.extract_zip_all(test_zip, temp_root)
+        test_zip.extractall(temp_root)
         root = os.path.join(
             temp_root, "apache-commons-maven-repository/maven-repository"
         )

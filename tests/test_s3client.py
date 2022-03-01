@@ -1,18 +1,16 @@
-"""
-Copyright (C) 2022 Red Hat, Inc. (https://github.com/Commonjava/charon)
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-         http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright (C) 2022 Red Hat, Inc. (https://github.com/Commonjava/charon)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#          http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from typing import List
 
@@ -21,7 +19,6 @@ from typing import List
 from boto3_type_annotations import s3
 
 from charon.storage import S3Client, CHECKSUM_META_KEY
-from charon.utils.archive import extract_zip_all
 from charon.utils.files import overwrite_file, read_sha1
 from charon.constants import PROD_INFO_SUFFIX
 from tests.base import BaseTest, SHORT_TEST_PREFIX
@@ -393,7 +390,7 @@ class S3ClientTest(BaseTest):
         )
         temp_root = os.path.join(self.tempdir, "tmp_zip")
         os.mkdir(temp_root)
-        extract_zip_all(test_zip, temp_root)
+        test_zip.extractall(temp_root)
         root = os.path.join(
             temp_root, "apache-commons-maven-repository/maven-repository"
         )
