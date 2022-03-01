@@ -28,7 +28,6 @@ from zipfile import ZipFile, BadZipFile
 from .indexing import generate_indexes
 from .pkg_utils import upload_post_process, rollback_post_process
 from ..utils import remove_prefix
-from ..utils.archive import extract_zip_all
 from ..utils.files import HashType
 from ..utils.files import overwrite_file, digest, write_manifest
 from ..storage import S3Client
@@ -52,14 +51,17 @@ def __get_mvn_template(kind: str, default: str) -> str:
         return default
 
 
+# TODO move these to templates in pkg_resources
 META_TEMPLATE = __get_mvn_template("maven-metadata.xml.j2", MAVEN_METADATA_TEMPLATE)
 ARCH_TEMPLATE = __get_mvn_template("archetype-catalog.xml.j2", ARCHETYPE_CATALOG_TEMPLATE)
+
 STANDARD_GENERATED_IGNORES = ["maven-metadata.xml", "archetype-catalog.xml"]
 
 
-class MavenMetadata(object):
-    """This MavenMetadata will represent a maven-metadata.xml data content which will be
-    used in jinja2 or other places
+class MavenMetadata():
+    """
+    This MavenMetadata will represent a maven-metadata.xml data content
+    which will be used in jinja2 or other places
     """
 
     def __init__(self, group_id: str, artifact_id: str, versions: List[str]):
@@ -92,19 +94,24 @@ class MavenMetadata(object):
         return f"{self.group_id}:{self.artifact_id}\n{self.versions}\n\n"
 
 
-class ArchetypeRef(object):
-    """This ArchetypeRef will represent an entry in archetype-catalog.xml content which will be
-    used in jinja2 or other places
+class ArchetypeRef():
+    """
+    This ArchetypeRef will represent an entry in archetype-catalog.xml
+    content which will be used in jinja2 or other places
     """
 
-    def __init__(self, group_id: str, artifact_id: str, version: str, description: str):
+    def __init__(self, group_id: str, artifact_id: str,
+                 version: str, description: str):
+
         self.group_id = group_id
         self.artifact_id = artifact_id
         self.version = version
         self.description = description
 
+
     def __hash__(self):
         return hash(self.group_id + self.artifact_id + self.version)
+
 
     def __eq__(self, other) -> bool:
         if isinstance(other, ArchetypeRef):
@@ -114,13 +121,16 @@ class ArchetypeRef(object):
 
         return False
 
+
     def __str__(self) -> str:
         return f"{self.group_id}:{self.artifact_id}\n{self.version}\n{self.description}\n\n"
 
 
 class MavenArchetypeCatalog(object):
-    """This MavenArchetypeCatalog represents an archetype-catalog.xml which will be
-    used in jinja2 to regenerate the file with merged contents
+    """
+    This MavenArchetypeCatalog represents an archetype-catalog.xml
+    which will be used in jinja2 to regenerate the file with merged
+    contents
     """
 
     def __init__(self, archetypes: List[ArchetypeRef]):
@@ -135,7 +145,10 @@ class MavenArchetypeCatalog(object):
 
 
 def scan_for_poms(full_path: str) -> List[str]:
-    """Scan a file path and finds all pom files absolute paths"""
+    """
+    Scan a file path and finds all pom files absolute paths
+    """
+
     # collect poms
     all_pom_paths = list()
     for (directory, _, names) in os.walk(full_path):
@@ -147,11 +160,13 @@ def scan_for_poms(full_path: str) -> List[str]:
 
 
 def parse_ga(full_ga_path: str, root="/") -> Tuple[str, str]:
-    """Parse maven groupId and artifactId from a standard path in a local maven repo.
-    e.g: org/apache/maven/plugin/maven-plugin-plugin -> (org.apache.maven.plugin,
-                                                         maven-plugin-plugin)
-    root is like a prefix of the path which is not part of the maven GAV
     """
+    Parse maven groupId and artifactId from a standard path in a local
+    maven repo.  e.g: org/apache/maven/plugin/maven-plugin-plugin ->
+    (org.apache.maven.plugin, maven-plugin-plugin) root is like a
+    prefix of the path which is not part of the maven GAV
+    """
+
     slash_root = root
     if not root.endswith("/"):
         slash_root = slash_root + "/"
@@ -169,12 +184,15 @@ def parse_ga(full_ga_path: str, root="/") -> Tuple[str, str]:
     return group, artifact
 
 
-def __parse_gav(full_artifact_path: str, root="/") -> Tuple[str, str, str]:
-    """Parse maven groupId, artifactId and version from a standard path in a local maven repo.
-    e.g: org/apache/maven/plugin/maven-plugin-plugin/1.0.0/maven-plugin-plugin-1.0.0.pom
-    -> (org.apache.maven.plugin, maven-plugin-plugin, 1.0.0)
-    root is like a prefix of the path which is not part of the maven GAV
+def parse_gav(full_artifact_path: str, root="/") -> Tuple[str, str, str]:
     """
+    Parse maven groupId, artifactId and version from a standard path in
+    a local maven repo.  e.g:
+    org/apache/maven/plugin/maven-plugin-plugin/1.0.0/maven-plugin-plugin-1.0.0.pom
+    -> (org.apache.maven.plugin, maven-plugin-plugin, 1.0.0) root is
+    like a prefix of the path which is not part of the maven GAV
+    """
+
     slash_root = root
     if not root.endswith("/"):
         slash_root = slash_root + "/"
@@ -193,14 +211,20 @@ def __parse_gav(full_artifact_path: str, root="/") -> Tuple[str, str, str]:
     return group, artifact, version
 
 
-def parse_gavs(pom_paths: List[str], root="/") -> Dict[str, Dict[str, List[str]]]:
-    """Give a list of paths with pom files and parse the maven groupId, artifactId and version
-    from them. The result will be a dict like {groupId: {artifactId: [versions list]}}.
-    Root is like a prefix of the path which is not part of the maven GAV
+def parse_gavs(
+        pom_paths: List[str],
+        root: str = "/") -> Dict[str, Dict[str, List[str]]]:
+
     """
+    Give a list of paths with pom files and parse the maven groupId,
+    artifactId and version from them. The result will be a dict like
+    {groupId: {artifactId: [versions list]}}.  Root is like a prefix
+    of the path which is not part of the maven GAV
+    """
+
     gavs = dict()
     for pom in pom_paths:
-        (g, a, v) = __parse_gav(pom, root)
+        (g, a, v) = parse_gav(pom, root)
         avs = gavs.get(g, dict())
         vers = avs.get(a, list())
         vers.append(v)
@@ -209,20 +233,27 @@ def parse_gavs(pom_paths: List[str], root="/") -> Dict[str, Dict[str, List[str]]
     return gavs
 
 
-def gen_meta_file(group_id, artifact_id: str, versions: list, root="/", digest=True) -> List[str]:
+def gen_meta_file(
+        group_id: str,
+        artifact_id: str,
+        versions: list,
+        root: str = "/",
+        digest: bool = True) -> List[str]:
+
     content = MavenMetadata(
         group_id, artifact_id, versions
     ).generate_meta_file_content()
     g_path = "/".join(group_id.split("."))
     meta_files = []
-    final_meta_path = os.path.join(root, g_path, artifact_id, "maven-metadata.xml")
-    try:
-        overwrite_file(final_meta_path, content)
-        meta_files.append(final_meta_path)
-    except FileNotFoundError as e:
-        raise e
+    final_meta_path = os.path.join(root, g_path, artifact_id,
+                                   "maven-metadata.xml")
+
+    overwrite_file(final_meta_path, content)
+    meta_files.append(final_meta_path)
+
     if digest:
         meta_files.extend(__gen_all_digest_files(final_meta_path))
+
     return meta_files
 
 
@@ -240,7 +271,11 @@ def __gen_all_digest_files(meta_file_path: str) -> List[str]:
     return digest_files
 
 
-def __gen_digest_file(hash_file_path, meta_file_path: str, hashtype: HashType) -> bool:
+def __gen_digest_file(
+        hash_file_path: str,
+        meta_file_path: str,
+        hashtype: HashType) -> bool:
+
     try:
         overwrite_file(hash_file_path, digest(meta_file_path, hashtype))
     except FileNotFoundError:
@@ -254,20 +289,22 @@ def __gen_digest_file(hash_file_path, meta_file_path: str, hashtype: HashType) -
 
 
 def handle_maven_uploading(
-    repo: str,
-    prod_key: str,
-    ignore_patterns=None,
-    root="maven-repository",
-    bucket_name=None,
-    aws_profile=None,
-    prefix=None,
-    dir_=None,
-    do_index=True,
-    dry_run=False,
-    target=None,
-    manifest_bucket_name=None
-) -> str:
-    """ Handle the maven product release tarball uploading process.
+        repo: str,
+        prod_key: str,
+        ignore_patterns=None,
+        root: str = "maven-repository",
+        bucket_name: str = None,
+        aws_profile: str = None,
+        prefix: str = None,
+        dir_: str = None,
+        do_index: bool = True,
+        dry_run: bool = False,
+        target: str = None,
+        manifest_bucket_name: str = None) -> str:
+
+    """
+    Handle the maven product release tarball uploading process.
+
         * repo is the location of the tarball in filesystem
         * prod_key is used to identify which product this repo
           tar belongs to
@@ -280,10 +317,11 @@ def handle_maven_uploading(
         * dir_ is base dir for extracting the tarball, will use system
           tmp dir if None.
 
-        Returns the directory used for archive processing.
+    Returns the directory used for archive processing.
     """
-    # 1. extract tarball
-    tmp_root = _extract_tarball(repo, prod_key, dir__=dir_)
+
+    # 1. extract archive zip
+    tmp_root = extract_zip(repo, prod_key, basedir=dir_)
 
     # 2. scan for paths and filter out the ignored paths,
     # and also collect poms for later metadata generation
@@ -433,7 +471,7 @@ def handle_maven_del(
         Returns the directory used for archive processing.
     """
     # 1. extract tarball
-    tmp_root = _extract_tarball(repo, prod_key, dir__=dir_)
+    tmp_root = extract_zip(repo, prod_key, basedir=dir_)
 
     # 2. scan for paths and filter out the ignored paths,
     # and also collect poms for later metadata generation
@@ -556,19 +594,17 @@ def handle_maven_del(
     return tmp_root
 
 
-def _extract_tarball(repo: str, prefix="", dir__=None) -> str:
-    if os.path.exists(repo):
-        try:
-            logger.info("Extracting tarball %s", repo)
-            repo_zip = ZipFile(repo)
-            tmp_root = mkdtemp(prefix=f"charon-{prefix}-", dir=dir__)
-            extract_zip_all(repo_zip, tmp_root)
-            return tmp_root
-        except BadZipFile as e:
-            logger.error("Tarball extraction error: %s", e)
-            sys.exit(1)
-    logger.error("Error: archive %s does not exist", repo)
-    sys.exit(1)
+def extract_zip(repo: str, prefix="", basedir=None) -> str:
+    try:
+        logger.info("Extracting zip %s", repo)
+        repo_zip = ZipFile(repo)
+        tmp_root = mkdtemp(prefix=f"charon-{prefix}-", dir=basedir)
+        repo_zip.extractall(tmp_root)
+        return tmp_root
+
+    except BadZipFile as e:
+        logger.error("zip extraction error: %s", e)
+        raise
 
 
 def _scan_paths(files_root: str, ignore_patterns: List[str],
@@ -967,7 +1003,10 @@ def _handle_error(err_msgs: List[str]):
 
 
 class VersionCompareKey:
-    'Used as key function for version sorting'
+    """
+    Used as key function for version sorting
+    """
+
     def __init__(self, obj):
         self.obj = obj
 
@@ -1023,12 +1062,14 @@ class VersionCompareKey:
 
 
 class ArchetypeCompareKey(VersionCompareKey):
-    'Used as key function for GAV sorting'
+    """
+    Used as key function for GAV sorting
+    """
+
     def __init__(self, gav):
         super().__init__(gav.version)
         self.gav = gav
 
-    # pylint: disable=unused-private-member
     def __compare(self, other) -> int:
         x = self.gav.group_id + ":" + self.gav.artifact_id
         y = other.gav.group_id + ":" + other.gav.artifact_id
@@ -1039,3 +1080,6 @@ class ArchetypeCompareKey(VersionCompareKey):
             return -1
         else:
             return 1
+
+
+# The end.
