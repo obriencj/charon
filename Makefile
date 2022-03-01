@@ -29,7 +29,7 @@ build: clean-built report-python flake8	## Produces a wheel using the default sy
 	@$(PYTHON) setup.py bdist_wheel
 
 
-install: quick-test	## Installs using the default python for the current user
+install: build ## Installs using the default python for the current user
 	@$(PYTHON) -B -m pip.__main__ \
 		install --no-deps --user -I \
 		dist/$(PROJECT)-$(VERSION)-py3-none-any.whl
@@ -105,7 +105,6 @@ $(ARCHIVE):
 	@git archive HEAD \
 		--format tar --prefix "$(PROJECT)-$(VERSION)/" \
 		| gzip > "$(ARCHIVE)"
-
 
 
 .PHONY: archive build clean clean-built default flake8 help mypy packaging-build packaging-test quick-test rpm srpm test tidy
