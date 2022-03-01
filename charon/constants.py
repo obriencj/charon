@@ -28,8 +28,11 @@ ARCHETYPE_CATALOG_TEMPLATE = '''
   </archetypes>
 </archetype-catalog>
 '''
+
 # Logging format used
-CHARON_LOGGING_FMT = '%(asctime)s - %(levelname)s - %(message)s'
+# CHARON_LOGGING_FMT = '%(asctime)s - %(levelname)s - %(message)s'
+CHARON_LOGGING_FMT = '%(message)s'
+
 DESCRIPTION = "charon is a tool to synchronize several types of artifacts "
 "repository data to RedHat Ronda service (maven.repository.redhat.com)."
 PROG = 'charon'
