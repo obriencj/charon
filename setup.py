@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 """
 Copyright (C) 2022 Red Hat, Inc. (https://github.com/Commonjava/charon)
 
