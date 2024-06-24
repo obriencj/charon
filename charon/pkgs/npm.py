@@ -534,7 +534,10 @@ def _is_latest_version(source_version: str, versions: List[str]):
     return True
 
 
-def _do_merge(original: NPMPackageMetadata, source: NPMPackageMetadata, is_latest: bool):
+def _do_merge(original: NPMPackageMetadata,
+              source: NPMPackageMetadata,
+              is_latest: bool):
+
     changed = False
     if is_latest:
         if source.name:
@@ -565,18 +568,30 @@ def _do_merge(original: NPMPackageMetadata, source: NPMPackageMetadata, is_lates
             original.repository = source.repository
             changed = True
     if source.maintainers:
-        for m in source.maintainers:
-            if m not in original.maintainers:
-                original.maintainers.append(m)
-                changed = True
+        if original.maintainers:
+            for m in source.maintainers:
+                if m not in original.maintainers:
+                    original.maintainers.append(m)
+                    changed = True
+        else:
+            original.maintainers = list(source.maintainers)
+            changed = True
     if source.keywords:
-        for k in source.keywords:
-            if k not in original.keywords:
-                original.keywords.append(k)
-                changed = True
+        if original.keywords:
+            for k in source.keywords:
+                if k not in original.keywords:
+                    original.keywords.append(k)
+                    changed = True
+        else:
+            original.keywords = list(source.keywords)
+            changed = True
     if source.users:
-        for u in source.users.keys():
-            original.users[u] = source.users.get(u)
+        if original.users:
+            for u in source.users.keys():
+                original.users[u] = source.users.get(u)
+                changed = True
+        else:
+            original.users = dict(source.users)
             changed = True
     if source.time:
         for t in source.time.keys():
