@@ -43,7 +43,7 @@ Requires: python%{python3_pkgversion}-certifi
 Requires: python%{python3_pkgversion}-pyOpenSSL
 Requires: python%{python3_pkgversion}-ruamel-yaml
 Requires: python%{python3_pkgversion}-defusedxml
-Requires: python%{python3_pkgversion}-semantic-version
+Requires: python%{python3_pkgversion}-semantic_version
 Requires: python%{python3_pkgversion}-subresource-integrity
 Requires: python%{python3_pkgversion}-jsonschema
 Requires: python%{python3_pkgversion}-importlib-metadata
